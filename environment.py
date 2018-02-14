@@ -2,6 +2,7 @@ from vizdoom import *
 import cv2
 from util import *
 import numpy
+import time
 
 AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].tolist()
 GOAL = [1,0.5,0.5,0,0]
@@ -11,7 +12,7 @@ resolution = (128,128)
 bots_num = 8
 
 class Environment:
-    def __init__(self, rand_seed, display = False, HAND_MODE = False):
+    def __init__(self, rand_seed, display = True, HAND_MODE = False):
         self.game = DoomGame()
         self.game.set_seed(rand_seed)
         self.game.load_config("scenarios\\cig.cfg")
@@ -67,3 +68,10 @@ class Environment:
             if self.game.is_player_dead():
                 self.game.respawn_player()
             return s
+
+
+if __name__ == '__main__':
+    en = Environment(13)
+    while True:
+        en.action(numpy.random.randint(4,7))
+        time.sleep(0.1)

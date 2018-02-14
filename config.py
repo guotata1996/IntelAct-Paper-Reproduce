@@ -15,6 +15,6 @@ continue_training = True
 ip_addr = 'tcp://192.168.1.6'
 #ip_addr = 'tcp://127.0.0.1'
 
-agent_num = 75
+agent_num = 80
 local_agent_start = 40
-local_agent_end = 75
+local_agent_end = 80
