@@ -4,7 +4,7 @@ from util import *
 import config
 import numpy
 
-AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].to_list
+AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].tolist()
 GOAL = [1,0.5,0.5,0,0]
 MEASUREMENT_OF_INTEREST = 3
 

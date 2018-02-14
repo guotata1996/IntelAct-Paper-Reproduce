@@ -34,28 +34,28 @@ class Network:
         self.expectation_1 = dense_layer(self.combined, 1024, 'exp1')
         self.expectation_2 = dense_layer(self.expectation_1, num_measurements*6, 'exp2', func=None)
         self.expectation_3 = tf.reshape(self.expectation_2, [-1, 6, num_measurements])
-        self.expectation_out = tf.stack([self.expectation_3]*7, 2) #None x 6 x 7 x num_measurements
+        self.expectation_out = tf.stack([self.expectation_3]*num_actions, 2) #None x 6 x num_actions x num_measurements
 
         self.vantage_1 = dense_layer(self.combined, 1024, 'van1')
-        self.vantage_2 = dense_layer(self.vantage_1, 6*num_measurements*7, 'van2', func=None)
-        self.vantage_out = tf.reshape(self.vantage_2, [-1, 6, 7, num_measurements])
-        self.vantage_out = self.vantage_out - tf.stack([tf.reduce_mean(self.vantage_out,reduction_indices=2)]*7, 2)
+        self.vantage_2 = dense_layer(self.vantage_1, 6*num_measurements*num_actions, 'van2', func=None)
+        self.vantage_out = tf.reshape(self.vantage_2, [-1, 6, num_actions, num_measurements])
+        self.vantage_out = self.vantage_out - tf.stack([tf.reduce_mean(self.vantage_out,reduction_indices=2)]*num_actions, 2)
 
-        self.expanded_goal = tf.stack([self.goal]*7, 2) #Nonex6x7xnum_measurements
+        self.expanded_goal = tf.stack([self.goal]*num_actions, 2) #Nonex6xnum_actionsxnum_measurements
         self.expanded_time_mask = tf.stack([self.time_mask]*num_measurements, -1) #None x 6 x num_measurements
-        self.expanded_time_mask = tf.stack([self.expanded_time_mask]*7, 2) #Nonex6x7xnum_measurements
+        self.expanded_time_mask = tf.stack([self.expanded_time_mask]*num_actions, 2) #Nonex6xnum_actionsxnum_measurements
         self.objective = tf.multiply(self.vantage_out, self.expanded_time_mask)
-        self.objective = tf.multiply(self.objective, self.expanded_goal) #Nonex6x7xnum_measurements
-        self.action_prediction = tf.reduce_sum(self.objective, [1, -1]) #None x 7
+        self.objective = tf.multiply(self.objective, self.expanded_goal) #Nonex6xnum_actionsxnum_measurements
+        self.action_prediction = tf.reduce_sum(self.objective, [1, -1]) #None x num_actions
 
-        self.delta_prediction = tf.add(self.expectation_out, self.vantage_out) #Noenx6x7xnum_measurements
+        self.delta_prediction = tf.add(self.expectation_out, self.vantage_out) #Noenx6xnum_actionsxnum_measurements
         self.expanded_input = tf.stack([self.input_measurement]*6, 1) #None x 6 x num_measurements
-        self.expanded_input = tf.stack([self.expanded_input]*7, 2) #None x 6 x 7 x num_measurements
+        self.expanded_input = tf.stack([self.expanded_input]*num_actions, 2) #None x 6 x num_actions x num_measurements
         self.measurement_prediction = tf.add(self.expanded_input, self.delta_prediction)
 
-        self.action_mask = tf.one_hot(self.real_action, 7, on_value=True, off_value=False) #Nonex7
-        self.action_mask = tf.stack([self.action_mask]*6, 1) #None x 6 x 7
-        self.measurement_for_loss = tf.stack([self.real_measurement]*7, 2) #Nonex6x7xreal_measurments
+        self.action_mask = tf.one_hot(self.real_action, num_actions, on_value=True, off_value=False) #Nonexnum_actions
+        self.action_mask = tf.stack([self.action_mask]*6, 1) #None x 6 x num_actions
+        self.measurement_for_loss = tf.stack([self.real_measurement]*num_actions, 2) #Nonex6xnum_actionsxreal_measurments
         self.masked_measurement = tf.boolean_mask(self.measurement_for_loss, self.action_mask) #?x5
         self.masked_prediction = tf.boolean_mask(self.measurement_prediction, self.action_mask)  #?x5
         self.error = tf.abs(self.masked_measurement - self.masked_prediction)
