@@ -12,7 +12,7 @@ resolution = (128,128)
 bots_num = 8
 
 class Environment:
-    def __init__(self, rand_seed, display = True, HAND_MODE = False):
+    def __init__(self, rand_seed, display = False, HAND_MODE = False):
         self.game = DoomGame()
         self.game.set_seed(rand_seed)
         self.game.load_config("scenarios\\cig.cfg")
