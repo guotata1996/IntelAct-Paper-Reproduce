@@ -1,12 +1,14 @@
 from vizdoom import *
 import cv2
 from util import *
-import config
 import numpy
 
 AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].tolist()
 GOAL = [1,0.5,0.5,0,0]
 MEASUREMENT_OF_INTEREST = 3
+frame_repeat = 4
+resolution = (128,128)
+bots_num = 8
 
 class Environment:
     def __init__(self, rand_seed, display = False, HAND_MODE = False):
@@ -35,7 +37,7 @@ class Environment:
             self.game.set_mode(Mode.SPECTATOR)
         self.game.init()
         self.game.send_game_command("removebots")
-        for i in range(config.bots_num):
+        for i in range(bots_num):
             self.game.send_game_command("addbot")
 
         self.hand_mode = HAND_MODE
@@ -43,7 +45,7 @@ class Environment:
 
 
     def action(self, action):
-        self.game.make_action(AVAILABLE_ACTIONS[action], config.frame_repeat)
+        self.game.make_action(AVAILABLE_ACTIONS[action], frame_repeat)
 
     def current_state(self):
         if self.game.is_episode_finished():
@@ -52,7 +54,7 @@ class Environment:
         else:
             screen = self.game.get_state().screen_buffer  # 3 x h x w
             screen = screen.transpose((1, 2, 0))  # h x w x 3
-            whole_screen = cv2.resize(screen, config.resolution)  # 60 x 108 x 3
+            whole_screen = cv2.resize(screen, resolution)  # 60 x 108 x 3
             whole_screen = whole_screen.astype(np.float32)
             health = self.game.get_game_variable(GameVariable.HEALTH) / 30.0
             frag = self.game.get_game_variable(GameVariable.FRAGCOUNT)
