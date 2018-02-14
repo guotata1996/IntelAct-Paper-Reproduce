@@ -1,18 +1,18 @@
 from vizdoom import *
 import cv2
-import numpy as np
-import math
 from util import *
 import config
+import numpy
 
-AVAILABLE_ACTIONS = config.available_actions.tolist()
-
+AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].to_list
+GOAL = [1,0.5,0.5,0,0]
+MEASUREMENT_OF_INTEREST = 3
 
 class Environment:
     def __init__(self, rand_seed, display = False, HAND_MODE = False):
         self.game = DoomGame()
         self.game.set_seed(rand_seed)
-        self.game.load_config("C:\\Users\\guotata\\Anaconda3\\envs\\py3\\lib\\site-packages\\vizdoom\\scenarios\\cig.cfg")
+        self.game.load_config("scenarios\\cig.cfg")
         self.game.set_doom_map("map01")  # Limited deathmatch.
         self.game.add_game_args("-host 1 -deathmatch +timelimit 1.0 "
                                 "+sv_forcerespawn 1 +sv_noautoaim 1 +sv_respawnprotect 1 +sv_spawnfarthest 1")

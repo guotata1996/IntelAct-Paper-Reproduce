@@ -65,7 +65,7 @@ class Network:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-        self.base_g = np.asarray([1, 0.5, 0.5, 0, 0])
+        self.base_g = np.asarray(goal)
         self.base_g = np.stack([self.base_g]*6, 0)
         self.base_timemask = np.asarray([0, 0, 0, 0.5, 0.5, 1])
 
@@ -112,7 +112,7 @@ class Network:
 
         _, loss_summary, error, step = self.sess.run([self.train_op, self.summarize_loss, self.error, self.global_step], feed_dict={self.input_images:input_images, self.input_measurement:input_measurement, self.goal:goal,
                                                 self.real_measurement:real_measurement, self.real_action:real_action})
-        mean_error = np.mean(error, 0)[3]
+        mean_error = np.mean(error, 0)[measurement_of_interest]
         error_summary = self.sess.run(self.summarize_error, feed_dict={self.angle_error:mean_error})
         self.summary_writer.add_summary(loss_summary, step)
         self.summary_writer.add_summary(error_summary, step)
