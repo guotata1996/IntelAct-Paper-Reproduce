@@ -8,9 +8,10 @@ GOAL = [1,0]
 MEASUREMENT_OF_INTEREST = 1
 frame_repeat = 4
 resolution = (128,128)
+#ultimate goal must be 1st measurement
 
 class Environment:
-    def __init__(self, rand_seed, display = True):
+    def __init__(self, rand_seed, display = False):
         self.game = DoomGame()
         self.game.set_seed(rand_seed)
         self.game.load_config("scenarios\\basic.cfg")

@@ -43,6 +43,8 @@ class MasterProcess(threading.Thread):
 		f.add_done_callback(callback)
 		if observation is not None:
 			self.predict_queue.put([observation, f])
+		else:
+			f.set_result(None)
 		return f
 
 	def parse_memory(self, ident, observation, predicting_result):
@@ -51,7 +53,8 @@ class MasterProcess(threading.Thread):
 	def _on_state(self, index, obs):
 		def cb(output):
 			predicting_result = output.result()
-			self.s2c_socket.send_multipart([nameClient(index), dump(predicting_result['action'])])
+			if predicting_result is not None:
+				self.s2c_socket.send_multipart([nameClient(index), dump(predicting_result['action'])])
 			training_data = self.parse_memory(index, obs, predicting_result)
 			if training_data is not None:
 				self.training_queue.put(training_data)

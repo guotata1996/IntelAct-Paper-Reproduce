@@ -130,8 +130,6 @@ class Network:
         self.saver.restore(self.sess, checkpoint_name)
 
     def log_performance(self, observation):
-        agent = np.random.randint(len(observation))
-        ob = observation[agent]
-        summary = self.sess.run(self.summarize_performance, feed_dict={self.frags: ob[bytes('measurement', encoding='utf8')][0]})
-        self.summary_writer.add_summary(summary)
+        summary, step = self.sess.run([self.summarize_performance, self.global_step], feed_dict={self.frags: observation[bytes('measurement', encoding='utf8')][0]})
+        self.summary_writer.add_summary(summary, step)
         self.summary_writer.flush()

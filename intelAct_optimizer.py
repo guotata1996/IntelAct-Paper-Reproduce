@@ -7,7 +7,8 @@ class intelAct_masterprocess(MasterProcess):
             #episode finished
             while self.client_memory[ident].qsize() > 1:
                 self.client_memory[ident].get()
-            self.network.log_performance(self.client_memory[ident].get())
+            if not self.client_memory[ident].empty():
+                self.network.log_performance(self.client_memory[ident].get())
             return None
         else:
             observation['real_action'] = predicting_result['action']
