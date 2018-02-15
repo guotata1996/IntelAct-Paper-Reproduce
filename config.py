@@ -11,10 +11,10 @@ save_freq = 1000000
 available_actions = AVAILABLE_ACTIONS
 measurement_of_interest = MEASUREMENT_OF_INTEREST
 goal = GOAL
-continue_training = False
+continue_training = True
 ip_addr = 'tcp://192.168.1.6'
 #ip_addr = 'tcp://127.0.0.1'
 
-agent_num = 75
-local_agent_start = 40
-local_agent_end = 75
+agent_num = 70
+local_agent_start = 35
+local_agent_end = 70
