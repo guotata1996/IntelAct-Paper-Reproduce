@@ -36,7 +36,6 @@ class MasterProcess(threading.Thread):
 
 		self.predictor.start()
 		self.trainer.start()
-		print('master process initialized')
 
 	def _put_predict_task(self, observation, callback):
 		f = Future()

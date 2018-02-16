@@ -49,5 +49,6 @@ if __name__ == '__main__':
     while True:
         en.action(np.random.randint(3))
         st = en.current_state()
-        print(st['measurement'][0])
+        if st is not None:
+            print(st['measurement'][0])
         time.sleep(0.1)

@@ -41,14 +41,16 @@ class Network:
         self.vantage_out = tf.reshape(self.vantage_2, [-1, 6, num_actions, num_measurements])
         self.vantage_out = self.vantage_out - tf.stack([tf.reduce_mean(self.vantage_out,reduction_indices=2)]*num_actions, 2)
 
+        '''
         self.expanded_goal = tf.stack([self.goal]*num_actions, 2) #Nonex6xnum_actionsxnum_measurements
         self.expanded_time_mask = tf.stack([self.time_mask]*num_measurements, -1) #None x 6 x num_measurements
         self.expanded_time_mask = tf.stack([self.expanded_time_mask]*num_actions, 2) #Nonex6xnum_actionsxnum_measurements
         self.objective = tf.multiply(self.vantage_out, self.expanded_time_mask)
         self.objective = tf.multiply(self.objective, self.expanded_goal) #Nonex6xnum_actionsxnum_measurements
         self.action_prediction = tf.reduce_sum(self.objective, [1, -1]) #None x num_actions
+        '''
 
-        self.delta_prediction = tf.add(self.expectation_out, self.vantage_out) #Noenx6xnum_actionsxnum_measurements
+        self.delta_prediction = tf.add(self.expectation_out, self.vantage_out) #Nonex6xnum_actionsxnum_measurements
         self.expanded_input = tf.stack([self.input_measurement]*6, 1) #None x 6 x num_measurements
         self.expanded_input = tf.stack([self.expanded_input]*num_actions, 2) #None x 6 x num_actions x num_measurements
         self.measurement_prediction = tf.add(self.expanded_input, self.delta_prediction)
@@ -67,7 +69,7 @@ class Network:
 
         self.base_g = np.asarray(goal)
         self.base_g = np.stack([self.base_g]*6, 0)
-        self.base_timemask = np.asarray([0, 0, 0, 0.5, 0.5, 1])
+        self.base_timemask = np.asarray([1, 1, 1, 0.5, 0.25, 0])
 
         self.summary_writer = tf.summary.FileWriter("log", self.sess.graph)
         self.summarize_loss = tf.summary.scalar('loss',self.loss)
@@ -83,18 +85,26 @@ class Network:
     def predict(self, observation):
         input_images = []
         input_measurement = []
-        goal = []
+        local_goal = []
         time_mask = []
 
         for ob in observation:
             input_images.append(ob[bytes('image', encoding='utf8')])
             input_measurement.append(ob[bytes('measurement', encoding='utf8')])
-            goal.append(self.base_g)
+            local_goal.append(self.base_g)
             time_mask.append(self.base_timemask)
 
-        pred = self.sess.run(self.action_prediction, feed_dict={self.input_images:input_images, self.time_mask:time_mask,
-                                                                            self.input_measurement:input_measurement, self.goal:goal})
-        return pred
+        pred = self.sess.run(self.delta_prediction, feed_dict={self.input_images:input_images, self.time_mask:time_mask,
+                                                                            self.input_measurement:input_measurement, self.goal:local_goal})
+        rtn = []
+        for i in range(pred.shape[0]):
+            single_p = pred[i]
+            single_rtn = np.zeros([num_actions])
+            for t in range(6):
+                for a in range(num_actions):
+                    single_rtn[a] += np.dot(single_p[t][a], goal) #omit time_mask
+            rtn.append(single_rtn)
+        return np.asarray(rtn)
 
     def train(self, observation):
         input_images = []
