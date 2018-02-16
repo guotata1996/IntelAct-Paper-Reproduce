@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 import time
 
-AVAILABLE_ACTIONS = [[1,0,0],[0,1,0],[0,0,1]]
-GOAL = [1,0]
-MEASUREMENT_OF_INTEREST = 1
+available_actions = [[1,0,0],[0,1,0],[0,0,1]]
+goal = [1,0]
+measurement_of_interest = 1
 frame_repeat = 4
 resolution = (128,128)
 #ultimate goal must be 1st measurement

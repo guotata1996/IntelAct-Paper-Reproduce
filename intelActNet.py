@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from config import *
+from config import config
 from util import *
 
 class Network:
@@ -8,9 +8,9 @@ class Network:
         self.global_step = tf.Variable(0, trainable=False, name='step')
 
         self.input_images = tf.placeholder(tf.float32, [None, 128, 128, 3])
-        self.input_measurement = tf.placeholder(tf.float32, [None, num_measurements])
-        self.goal = tf.placeholder(tf.float32, [None, 6, num_measurements])
-        self.real_measurement = tf.placeholder(tf.float32, [None, 6, num_measurements])
+        self.input_measurement = tf.placeholder(tf.float32, [None, config.num_measurements])
+        self.goal = tf.placeholder(tf.float32, [None, 6, config.num_measurements])
+        self.real_measurement = tf.placeholder(tf.float32, [None, 6, config.num_measurements])
         self.real_action = tf.placeholder(tf.int32, [None])
         self.time_mask = tf.placeholder(tf.float32, [None, 6])
 
@@ -32,14 +32,14 @@ class Network:
         self.combined = tf.concat([self.per_out, self.mea_out, self.goal_out], 1)
 
         self.expectation_1 = dense_layer(self.combined, 1024, 'exp1')
-        self.expectation_2 = dense_layer(self.expectation_1, num_measurements*6, 'exp2', func=None)
-        self.expectation_3 = tf.reshape(self.expectation_2, [-1, 6, num_measurements])
-        self.expectation_out = tf.stack([self.expectation_3]*num_actions, 2) #None x 6 x num_actions x num_measurements
+        self.expectation_2 = dense_layer(self.expectation_1, config.num_measurements*6, 'exp2', func=None)
+        self.expectation_3 = tf.reshape(self.expectation_2, [-1, 6, config.num_measurements])
+        self.expectation_out = tf.stack([self.expectation_3]*config.num_actions, 2) #None x 6 x num_actions x num_measurements
 
         self.vantage_1 = dense_layer(self.combined, 1024, 'van1')
-        self.vantage_2 = dense_layer(self.vantage_1, 6*num_measurements*num_actions, 'van2', func=None)
-        self.vantage_out = tf.reshape(self.vantage_2, [-1, 6, num_actions, num_measurements])
-        self.vantage_out = self.vantage_out - tf.stack([tf.reduce_mean(self.vantage_out,reduction_indices=2)]*num_actions, 2)
+        self.vantage_2 = dense_layer(self.vantage_1, 6*config.num_measurements*config.num_actions, 'van2', func=None)
+        self.vantage_out = tf.reshape(self.vantage_2, [-1, 6, config.num_actions, config.num_measurements])
+        self.vantage_out = self.vantage_out - tf.stack([tf.reduce_mean(self.vantage_out,reduction_indices=2)]*config.num_actions, 2)
 
         '''
         self.expanded_goal = tf.stack([self.goal]*num_actions, 2) #Nonex6xnum_actionsxnum_measurements
@@ -52,12 +52,12 @@ class Network:
 
         self.delta_prediction = tf.add(self.expectation_out, self.vantage_out) #Nonex6xnum_actionsxnum_measurements
         self.expanded_input = tf.stack([self.input_measurement]*6, 1) #None x 6 x num_measurements
-        self.expanded_input = tf.stack([self.expanded_input]*num_actions, 2) #None x 6 x num_actions x num_measurements
+        self.expanded_input = tf.stack([self.expanded_input]*config.num_actions, 2) #None x 6 x num_actions x num_measurements
         self.measurement_prediction = tf.add(self.expanded_input, self.delta_prediction)
 
-        self.action_mask = tf.one_hot(self.real_action, num_actions, on_value=True, off_value=False) #Nonexnum_actions
+        self.action_mask = tf.one_hot(self.real_action, config.num_actions, on_value=True, off_value=False) #Nonexnum_actions
         self.action_mask = tf.stack([self.action_mask]*6, 1) #None x 6 x num_actions
-        self.measurement_for_loss = tf.stack([self.real_measurement]*num_actions, 2) #Nonex6xnum_actionsxreal_measurments
+        self.measurement_for_loss = tf.stack([self.real_measurement]*config.num_actions, 2) #Nonex6xnum_actionsxreal_measurments
         self.masked_measurement = tf.boolean_mask(self.measurement_for_loss, self.action_mask) #?x5
         self.masked_prediction = tf.boolean_mask(self.measurement_prediction, self.action_mask)  #?x5
         self.error = tf.abs(self.masked_measurement - self.masked_prediction)
@@ -67,7 +67,7 @@ class Network:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-        self.base_g = np.asarray(goal)
+        self.base_g = np.asarray(config.goal)
         self.base_g = np.stack([self.base_g]*6, 0)
         self.base_timemask = np.asarray([1, 1, 1, 0.5, 0.25, 0])
 
@@ -99,10 +99,10 @@ class Network:
         rtn = []
         for i in range(pred.shape[0]):
             single_p = pred[i]
-            single_rtn = np.zeros([num_actions])
+            single_rtn = np.zeros([config.num_actions])
             for t in range(6):
-                for a in range(num_actions):
-                    single_rtn[a] += np.dot(single_p[t][a], goal) #omit time_mask
+                for a in range(config.num_actions):
+                    single_rtn[a] += np.dot(single_p[t][a], config.goal) #omit time_mask
             rtn.append(single_rtn)
         return np.asarray(rtn)
 
@@ -122,14 +122,14 @@ class Network:
 
         _, loss_summary, error, step = self.sess.run([self.train_op, self.summarize_loss, self.error, self.global_step], feed_dict={self.input_images:input_images, self.input_measurement:input_measurement, self.goal:goal,
                                                 self.real_measurement:real_measurement, self.real_action:real_action})
-        mean_error = np.mean(error, 0)[measurement_of_interest]
+        mean_error = np.mean(error, 0)[config.measurement_of_interest]
         error_summary = self.sess.run(self.summarize_error, feed_dict={self.angle_error:mean_error})
         self.summary_writer.add_summary(loss_summary, step)
         self.summary_writer.add_summary(error_summary, step)
         self.summary_writer.flush()
 
     def _checkpoint_filename(self, episode):
-        return 'checkpoints/%s_%08d' % (model_name, episode)
+        return 'checkpoints/%s_%08d' % (config.model_name, episode)
 
     def save(self):
         step = self.sess.run(self.global_step)

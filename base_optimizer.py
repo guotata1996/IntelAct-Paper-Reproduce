@@ -11,7 +11,7 @@ from tqdm import tqdm
 from queue import Queue
 
 from intelActNet import Network
-import config
+from config import config
 from util import *
 
 class MasterProcess(threading.Thread):
@@ -67,6 +67,7 @@ class MasterProcess(threading.Thread):
 				self._on_state(client_id, observations)
 
 			self.network.save()
+			config.update()
 
 class PredictThread(threading.Thread):
 	def __init__(self, predicting_queue, network):

@@ -1,6 +1,6 @@
 import multiprocessing
 from util import nameClient
-from environment_basic import Environment
+from environment import Environment
 import zmq
 from msgpack_numpy import dumps as dump
 from msgpack_numpy import loads as load

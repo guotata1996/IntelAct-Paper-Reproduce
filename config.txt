@@ -1,0 +1,13 @@
+model_name = intelActBase
+ip_addr = tcp://127.0.0.1
+environment = environment
+-
+agent_num = 35
+local_agent_start = 0
+local_agent_end = 35
+batch_size = 64
+bots_num = 8
+save_freq = 800000
+p_explore = 0.2
+-
+continue_training = True

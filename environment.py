@@ -4,9 +4,9 @@ from util import *
 import numpy
 import time
 
-AVAILABLE_ACTIONS = numpy.eye(9)[:7,:].tolist()
-GOAL = [1,0.5,0.5,0,0]
-MEASUREMENT_OF_INTEREST = 3
+available_actions = numpy.eye(9)[:7,:].tolist()
+goal = [1,0.5,0.5,0,0]
+measurement_of_interest = 3
 frame_repeat = 4
 resolution = (128,128)
 bots_num = 8
@@ -27,11 +27,6 @@ class Environment:
         self.game.add_available_game_variable(GameVariable.FRAGCOUNT)
         self.game.add_available_game_variable(GameVariable.ANGLE)
 
-        self.total_frag_count = 0
-        self.kill = 0
-        self.death = 0
-        self.opponent_location = []
-
         self.game.set_window_visible(display)
 
         if HAND_MODE:
@@ -46,7 +41,7 @@ class Environment:
 
 
     def action(self, action):
-        self.game.make_action(AVAILABLE_ACTIONS[action], frame_repeat)
+        self.game.make_action(available_actions[action], frame_repeat)
 
     def current_state(self):
         if self.game.is_episode_finished():
